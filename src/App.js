@@ -551,7 +551,7 @@ isLoading() {
                 <div className={'App'}>
                     <div className={'loader-container'} >
                         <div className={'loader h-100 d-flex justify-content-center align-items-center'}>
-                            <span>Loading...</span>
+                            <span><small>Loading...if impatient refresh</small></span>
                            <a href={'https://www.github.com/DrMaxis'}><img width="100px;" src={AlchemistBlock} alt={'Alchemists Block'} title={'Alchemists Block'}/></a>
                         </div>
                     </div>
