@@ -90,6 +90,7 @@ async function fetchLatestListings(requestOptions) {
             price: waifu.price,
             last_updated: waifu.last_updated,
             verified: waifu.verified,
+            listing: waifu.listing,
         })
     }));
 
@@ -124,6 +125,7 @@ async function fetchCatGirlNFT(tokenID) {
 
 async function getCatGirlInfo(listing, rawNFT) {
     let rawCat, nftResponse, NFT, waifu;
+    console.log(listing);
     if (listing !== false) {
         rawCat = {
             nftTradeId: listing.id,
@@ -181,6 +183,7 @@ async function getCatGirlInfo(listing, rawNFT) {
         tokenID: rawCat.tokenID,
         last_updated: rawCat.last_updated,
         verified: rawCat.verified,
+        listing: `${process.env.REACT_APP_NFTTRADE_LISTING_URL}/${process.env.REACT_APP_CATGIRL_ADDRESS}/${rawCat.tokenID}`
     }
 }
 
@@ -229,6 +232,20 @@ const columns = [
         reorder: true,
     },
     {
+        name: 'Listing',
+        selector: row => row.listing != null ? <a href={row.listing}>Listing</a> : 'N/A',
+        sortable: true,
+        right: true,
+        reorder: true,
+    },
+    {
+        name: 'Owner',
+        selector: row => row.owner ?? 'N/A',
+        sortable: true,
+        right: true,
+        reorder: true,
+    },
+    {
         name: 'Price (BNB)',
         selector: row => row.price ?? 'N/A',
         sortable: true,
@@ -259,13 +276,6 @@ const columns = [
     {
         name: 'Sold at',
         selector: row => row.last_sell_time != null ? moment(row.last_sell_time).format('ll') : 'N/A',
-        sortable: true,
-        right: true,
-        reorder: true,
-    },
-    {
-        name: 'Owner',
-        selector: row => row.owner ?? 'N/A',
         sortable: true,
         right: true,
         reorder: true,
