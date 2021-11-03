@@ -452,7 +452,7 @@ isLoading() {
             request.then(result => {
                 this.setState({loading: true});
                 setTimeout(() => {
-                    this.setState({loading: true});
+                    this.setState({loading: false});
                     this.setState({data: [result]});
                 }, 1500)
 
