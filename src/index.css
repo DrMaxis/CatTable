@@ -11,3 +11,13 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+.data-table-extensions-action {
+  visibility: hidden;
+}
+.catgirl-avi {
+  height: 100%;
+  width: 100%;
+}
+.hidden-button {
+  visibility: hidden;
+}

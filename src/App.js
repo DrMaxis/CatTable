@@ -1,14 +1,25 @@
 import {createClient} from 'urql';
 import axios from 'axios';
-import React from 'react';
+import React, {useState} from 'react';
 import moment from 'moment'
 import DataTable from '../src/components/DataTableBase';
 import DataTableExtensions from 'react-data-table-component-extensions';
 import 'react-data-table-component-extensions/dist/index.css';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import {Button, Col, FormControl, InputGroup} from "react-bootstrap";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import Charm from './ahri-charm.gif';
 
-const _ = require('lodash');
+
+require('dotenv').config();
+const Web3 = require('web3');
 const waifus = require('../src/utils/girls');
-const APIURL = "https://api.thegraph.com/subgraphs/name/catgirlcoin/catgirl-bsc"
+const catgirlanalyticsurl = process.env.REACT_APP_CATGIRL_ANALYTICS_URL;
+const catgirlID = process.env.REACT_APP_CATGIRL_NFTTRADE_ID;
+const catgirlChainID = process.env.REACT_APP_CATGIRL_NFT_CHAINID;
+const nftTradeUrl = process.env.REACT_APP_CATGIRL_NFTTRADE_LISTINGS_URL;
+const nftAnalyticsUrl = process.env.REACT_APP_NFT_ACCOUNT_ANALYTICS_URL;
 
 const fetchAllQuery = `
 query {
@@ -29,21 +40,36 @@ query {
 }
 
 `
-async function fetchNFTTradeListings() {
-    const fetchLimit = 1000;
-    //const address = requestOptions.address;
 
-    let queryOptions = `&limit=${fetchLimit}&skip=0&sort=listed_desc`;
-
+async function getBNBPrice() {
+    const url = 'https://api.binance.com/api/v3/ticker/price?symbol=BNBUSDT';
     return axios({
         method: 'get',
-        url: `https://api.nftrade.com/api/v1/tokens?contracts[]=d6989ada-8bc6-416c-87be-dc84de7710fb&chains[]=56` + queryOptions,
+        url: url,
+    })
+        .then(function (response) {
+            return response.data.price;
+        });
+}
+
+async function fetchNFTTradeListings(options) {
+    let query;
+    const fetchLimit = 100;
+    if (options) {
+        query = `${nftAnalyticsUrl}` + `${encodeURIComponent(options.address)}&contracts[]=${catgirlID}&connectedChainId[]=${catgirlChainID}&limit=${fetchLimit}&skip=0&sort=listed_desc`;
+    } else {
+        query = `${nftTradeUrl}` + `&limit=${fetchLimit}&skip=0&sort=listed_desc`;
+    }
+    return axios({
+        method: 'get',
+        url: query,
     })
         .then(function (response) {
             return response
         });
 
 }
+
 function determineWaifu(characterId, rarity) {
 
     let waifu = waifus.girls.filter(function (cat) {
@@ -55,14 +81,20 @@ function determineWaifu(characterId, rarity) {
         avi: waifu[0]['avi']
     }
 }
-async function fetchLatestListings() {
+
+async function fetchLatestListings(requestOptions) {
+    let listings;
     let waifus = [];
-    let listings = await fetchNFTTradeListings();
 
+    if (requestOptions.address !== null) {
+        listings = await fetchNFTTradeListings(requestOptions);
+    } else {
+        listings = await fetchNFTTradeListings(false);
+    }
 
-    _.forEach(listings.data, async function (listing) {
-        let waifu =  await getCatGirlInfo(listing);
-        return waifus.push( {
+    await Promise.all(listings.data.map(async function (listing) {
+        let waifu = await getCatGirlInfo(listing, []);
+        return waifus.push({
             season: waifu.season,
             avi: waifu.avi,
             name: waifu.name,
@@ -73,19 +105,18 @@ async function fetchLatestListings() {
             highest_offer: waifu.highest_offer,
             last_sell: waifu.last_sell,
             last_sell_time: waifu.last_sell_time,
-            mintTime: moment.unix(waifu.mintTime).format('dddd, MMMM Do, YYYY h:mm:ss A'),
+            mintTime: waifu.mintTime,
             price: waifu.price,
             last_updated: waifu.last_updated,
             verified: waifu.verified,
         })
+    }));
 
-    });
-
-    return waifus
+    return waifus;
 }
+
 async function fetchCatGirlNFT(tokenID) {
-    const APIURL = "https://api.thegraph.com/subgraphs/name/catgirlcoin/catgirl-bsc"
-    const client = createClient({url: APIURL});
+    const client = createClient({url: catgirlanalyticsurl});
     const fetchCatGirlQuery = `
     query {
       catgirls(
@@ -108,25 +139,47 @@ async function fetchCatGirlNFT(tokenID) {
     `
     return await client.query(fetchCatGirlQuery).toPromise();
 }
-async function getCatGirlInfo(listing) {
 
-    let rawCat = {
-        nftTradeId: listing.id,
-        contractId: listing.contractId,
-        list_time: listing.listedAt,
-        highest_offer: listing.highest_offer,
-        last_sell: listing.last_sell,
-        last_sell_time: listing.last_sell_at,
-        mintTime: listing.mintTime,
-        price: listing.price,
-        tokenID: listing.tokenID,
-        last_updated: listing.updatedAt,
-        verified: listing.contract.verified,
+
+async function getCatGirlInfo(listing, rawNFT) {
+    let rawCat, nftResponse, NFT, waifu;
+    if (listing !== false) {
+        rawCat = {
+            nftTradeId: listing.id,
+            contractId: listing.contractId,
+            list_time: listing.listedAt,
+            highest_offer: listing.highest_offer,
+            last_sell: listing.last_sell,
+            last_sell_time: listing.last_sell_at,
+            mintTime: listing.mintTime,
+            price: listing.price,
+            tokenID: listing.tokenID,
+            last_updated: listing.updatedAt,
+            verified: listing.contract.verified,
+        }
+        nftResponse = await fetchCatGirlNFT(rawCat.tokenID);
+        NFT = await nftResponse.data.catgirls[0];
+        waifu = determineWaifu(NFT.characterId, NFT.rarity);
     }
 
-    let nftResponse = await fetchCatGirlNFT(rawCat.tokenID);
-    let NFT = nftResponse.data.catgirls[0];
-    let waifu = determineWaifu(NFT.characterId, NFT.rarity);
+    if (rawNFT.length !== 0) {
+        nftResponse = await rawNFT;
+        NFT = await nftResponse.data.catgirls[0];
+        rawCat = {
+            nftTradeId: listing.id ?? null,
+            contractId: listing.contractId ?? null,
+            list_time: listing.listedAt ?? null,
+            highest_offer: listing.highest_offer ?? null,
+            last_sell: listing.last_sell ?? null,
+            last_sell_time: listing.last_sell_at ?? null,
+            mintTime: listing.mintTime ?? null,
+            price: listing.price ?? null,
+            tokenID: listing.tokenID ?? NFT.id,
+            last_updated: listing.updatedAt ?? null,
+            verified: null,
+        }
+        waifu = determineWaifu(NFT.characterId, NFT.rarity);
+    }
 
     return {
         season: NFT.season,
@@ -164,7 +217,7 @@ const columns = [
         sortable: true,
         right: true,
         reorder: true,
-        cell: row => <img height="84px" width="56px" alt={'Nyaa'} src={row.avi} />
+        cell: row => <img className={"catgirl-avi"} alt={'Nyaa'} src={row.avi}/>
     },
     {
         name: 'Name',
@@ -189,13 +242,13 @@ const columns = [
     },
     {
         name: 'Born',
-        selector: row => row.mintTime ?? 'N/A',
+        selector: row => row.mintTime != null ? moment.unix(row.mintTime).format('ll') : 'N/A',
         sortable: true,
         right: true,
         reorder: true,
     },
     {
-        name: 'List Price',
+        name: 'Price (BNB)',
         selector: row => row.price ?? 'N/A',
         sortable: true,
         right: true,
@@ -203,7 +256,7 @@ const columns = [
     },
     {
         name: 'Listed',
-        selector: row => row.list_time ?? 'N/A',
+        selector: row => row.list_time != null ? moment(row.list_time).format('ll') : 'N/A',
         sortable: true,
         right: true,
         reorder: true,
@@ -216,85 +269,277 @@ const columns = [
         reorder: true,
     },
     {
-        name: 'Sell Price',
-        selector: row => row.last_sell ??'N/A',
+        name: 'Sold For (BNB)',
+        selector: row => row.last_sell ?? 'N/A',
         sortable: true,
         right: true,
         reorder: true,
     },
     {
         name: 'Sold at',
-        selector: row => row.last_sell_time ?? 'N/A',
+        selector: row => row.last_sell_time != null ? moment(row.last_sell_time).format('ll') : 'N/A',
+        sortable: true,
+        right: true,
+        reorder: true,
+    },
+    {
+        name: 'Owner',
+        selector: row => row.owner ?? 'N/A',
         sortable: true,
         right: true,
         reorder: true,
     },
     {
         name: 'Last Updated',
-        selector: row => row.last_updated ?? 'N/A',
+        selector: row => row.last_updated != null ? moment(row.last_updated).format('ll') : 'N/A',
         sortable: true,
         right: true,
         reorder: true,
     },
 
 ];
-
-
-
+const ExpandedComponent = ({data}) => <pre>{JSON.stringify(data, null, 2)}</pre>;
 
 class App extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            data: {}
+            data: {},
+            name: '',
+            searchInput: '',
+            timestamp: moment().unix(),
+            error: '',
+            bnbPrice: ''
         };
+        this.handleOnChange = this.handleOnChange.bind(this)
+        this.onAddressInput = this.onAddressInput.bind(this)
+        this.handleAddressSubmit = this.handleAddressSubmit.bind(this)
+        this.validateAddress = this.validateAddress.bind(this);
     }
 
 
-     componentWillMount() {
-        let promise = new Promise((resolve, reject)=> {
-            let data =  fetchLatestListings();
-            if(data) {
+    handleOnChange({target: {name, value}}) {
+        this.setState({[name]: value}, () => {
+        })
+    }
+
+    componentDidMount() {
+
+        let fetchBNBPrice = new Promise((resolve, reject) => {
+            let data = getBNBPrice();
+            if (data) {
                 resolve(data);
             } else {
                 reject(Error('error'));
             }
-
         })
 
-
-        promise.then(result => {
+        fetchBNBPrice.then(result => {
             setTimeout(() => {
-                this.setState({data: result});
-        }, 500)
+                this.setState({bnbPrice: result});
+            }, 1500)
 
         }, function (error) {
-            this.setState({data:error});
+            console.log(error);
+            this.setState({error: error});
+        })
+
+        let fetchTableData = new Promise((resolve, reject) => {
+            let data = fetchLatestListings(false);
+            if (data) {
+                resolve(data);
+            } else {
+                reject(Error('error'));
+            }
+        })
+
+        fetchTableData.then(result => {
+            setTimeout(() => {
+                this.setState({data: result});
+            }, 1500)
+
+        }, function (error) {
+            console.log(error);
+            this.setState({error: error});
         })
     }
 
+    onAddressInput({target: {name, value}}) {
+        console.log(name, value)
+        this.setState({[name]: value}, () => {
+        })
+    }
 
+    validateAddress(input) {
+        return Web3.utils.isAddress(input);
+    }
+
+    handleAddressSubmit(e) {
+        e.preventDefault();
+
+        let isVerifiedAddress = this.validateAddress(this.state.searchInput);
+        let isOnlyNumber = /^\d+$/.test(this.state.searchInput);
+        let data = this.state.searchInput;
+        let response;
+        console.log(data);
+        if (!isVerifiedAddress && !isOnlyNumber) {
+            let promise = new Promise((resolve, reject) => {
+                let data = fetchLatestListings(this.state.searchInput);
+                if (data) {
+                    resolve(data);
+                } else {
+                    reject(Error('error'));
+                }
+
+            })
+
+            promise.then(result => {
+                setTimeout(() => {
+                    this.setState({data: result});
+                }, 1500)
+
+            }, function (error) {
+                console.log(error);
+                this.setState({error: error});
+
+            })
+        }
+        if (isVerifiedAddress) {
+            let request = new Promise((resolve, reject) => {
+
+                let data = fetchLatestListings({address: this.state.searchInput});
+
+                if (data) {
+                    console.log('NOOO', data)
+                    resolve(data);
+                } else {
+                    reject(Error('error'));
+                }
+            })
+            request.then(result => {
+                console.log('result', result);
+                if (result.length !== 0) {
+                    console.log(result)
+                    response = result;
+                    console.log(response, 'ersp')
+                } else {
+                    response = [];
+                    console.log('oik', response)
+                }
+                setTimeout(() => {
+                    this.setState({data: response});
+                }, 1500)
+
+            }, function (error) {
+                console.log(error);
+                this.setState({error: error});
+            })
+        }
+        if (isOnlyNumber) {
+            let request = new Promise((resolve, reject) => {
+                let data = getCatGirlInfo(false, fetchCatGirlNFT(this.state.searchInput));
+                if (data) {
+                    resolve(data);
+                } else {
+                    reject(Error('error'));
+                }
+            })
+            request.then(result => {
+                console.log('result', result)
+                setTimeout(() => {
+                    this.setState({data: [result]});
+                }, 1500)
+
+            }, function (error) {
+                console.log(error);
+
+                this.setState({error: error});
+            })
+        }
+
+
+        //this.setState({['data']: {}})
+
+    }
 
     render() {
 
         let data = this.state.data;
+        const {searchInput, bnbPrice} = this.state;
+        console.log(Charm)
         let tableData = {columns, data}
-        return data.length ?
-            <DataTableExtensions {...tableData} >
-                <DataTable
-                    title="Most Recent CatGirl Listings"
-                    pagination
-                    print={false}
-                    export={false}
-                    highlightOnHover
-                    filter
-                />
-            </DataTableExtensions>
-             :(
+        if ((data.length === 1 && data[0].length === 0) || (data === undefined || data.length === 0)) {
+            data = ['0'];
+        }
 
-            <span> loading</span>
-        );
+
+        return data.length > 0 ?
+            <div className={'App'}>
+                <Container className={'cattable-container '} fluid>
+                    <Row>
+                        <Col md={6} className={'d-inline-block'}>
+                            <InputGroup className="mb-3">
+                                <form onSubmit={this.handleAddressSubmit}>
+                                    <FormControl
+                                        aria-label="NTF Look Up"
+                                        aria-describedby="basic-addon2"
+                                        type="text"
+                                        name="searchInput"
+                                        value={searchInput}
+                                        onChange={this.onAddressInput}
+                                        placeholder="Lookup by ID or Address"
+                                    />
+
+                                    <Button type={'submit'} className={"hidden-button"} variant="outline-secondary"
+                                            id="button-addon2">
+                                        Button
+                                    </Button>
+                                </form>
+                            </InputGroup>
+                        </Col>
+                    </Row>
+
+                    <div>
+                        Current BNB price: ${parseFloat(bnbPrice).toFixed(2)}
+                    </div>
+
+
+                    <Row>
+                        <Col md={12}>
+                            <DataTableExtensions {...tableData} >
+                                <DataTable
+                                    title="Most Recent CatGirl Listings"
+                                    pagination
+                                    print={false}
+                                    export={false}
+                                    highlightOnHover
+                                    filter
+                                    expandableRows={true}
+                                    expandableRowsComponent={ExpandedComponent}
+                                    expandOnRowClicked={false}
+                                    expandOnRowDoubleClicked={false}
+                                    expandableRowsHideExpander={false}
+                                />
+                            </DataTableExtensions>
+                        </Col>
+
+
+                    </Row>
+                </Container>
+            </div>
+
+            : (
+
+                <div className={'App'}>
+                    <Container className={'cattable-container '} fluid>
+                        Loading...
+
+                        <img src={Charm} alt={'Ahri Kiss'}/>
+                    </Container>
+                </div>
+            );
 
     }
 }
+
 export default App;
