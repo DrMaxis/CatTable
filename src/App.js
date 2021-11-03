@@ -1,6 +1,7 @@
 import {createClient} from 'urql';
 import axios from 'axios';
-import moment from 'moment'
+import React from 'react';
+import moment from 'moment';
 import DataTable from '../src/components/DataTableBase';
 import DataTableExtensions from 'react-data-table-component-extensions';
 import 'react-data-table-component-extensions/dist/index.css';
