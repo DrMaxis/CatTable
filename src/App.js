@@ -197,7 +197,6 @@ const columns = [
     {
         name: 'Avi',
         selector: row => row.avi,
-        sortable: true,
         right: true,
         reorder: true,
         cell: row => <img className={"catgirl-avi"} alt={'Nyaa'} src={row.avi}/>
@@ -233,14 +232,12 @@ const columns = [
     {
         name: 'Listing',
         selector: row => row.listing != null ? <a href={row.listing}>Listing</a> : 'N/A',
-        sortable: true,
         right: true,
         reorder: true,
     },
     {
         name: 'Owner',
         selector: row => row.owner ?? 'N/A',
-        sortable: true,
         right: true,
         reorder: true,
     },
