@@ -9,7 +9,7 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import {Button, Col, FormControl, InputGroup} from "react-bootstrap";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import Charm from './ahri-charm.gif';
+import AlchemistBlock from './assets/alchemistblock.gif';
 
 
 require('dotenv').config();
@@ -20,6 +20,7 @@ const catgirlID = process.env.REACT_APP_CATGIRL_NFTTRADE_ID;
 const catgirlChainID = process.env.REACT_APP_CATGIRL_NFT_CHAINID;
 const nftTradeUrl = process.env.REACT_APP_CATGIRL_NFTTRADE_LISTINGS_URL;
 const nftAnalyticsUrl = process.env.REACT_APP_NFT_ACCOUNT_ANALYTICS_URL;
+const binanceApiUrl = process.env.REACT_APP_BINANCE_API_URL;
 
 const fetchAllQuery = `
 query {
@@ -42,7 +43,7 @@ query {
 `
 
 async function getBNBPrice() {
-    const url = 'https://api.binance.com/api/v3/ticker/price?symbol=BNBUSDT';
+    const url = `${binanceApiUrl}`;
     return axios({
         method: 'get',
         url: url,
@@ -262,7 +263,7 @@ const columns = [
         reorder: true,
     },
     {
-        name: 'highest Offer',
+        name: 'Highest Offer',
         selector: row => row.highest_offer ?? 'N/A',
         sortable: true,
         right: true,
@@ -466,12 +467,10 @@ class App extends React.Component {
 
         let data = this.state.data;
         const {searchInput, bnbPrice} = this.state;
-        console.log(Charm)
         let tableData = {columns, data}
         if ((data.length === 1 && data[0].length === 0) || (data === undefined || data.length === 0)) {
             data = ['0'];
         }
-
 
         return data.length > 0 ?
             <div className={'App'}>
@@ -531,11 +530,12 @@ class App extends React.Component {
             : (
 
                 <div className={'App'}>
-                    <Container className={'cattable-container '} fluid>
-                        Loading...
-
-                        <img src={Charm} alt={'Ahri Kiss'}/>
-                    </Container>
+                    <div className={'loader-container'} >
+                        <div className={'loader h-100 d-flex justify-content-center align-items-center'}>
+                            <span>Loading...</span>
+                           <a href={'https://www.github.com/DrMaxis'}><img width="100px;" src={AlchemistBlock} alt={'Alchemists Block'} title={'Alchemists Block'}/></a>
+                        </div>
+                    </div>
                 </div>
             );
 

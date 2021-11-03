@@ -45,14 +45,14 @@ const girls = [
         "name": "Celeste",
         "rarity": "3",
         "characterID": "0",
-        "avi": "https://www.catgirl.io/images/catgirls/celeste/celeste--full.mp4",
+        "avi": "/assets/celeste.png",
         "season": "1"
     },
     {
         "name": "Mittsy",
         "rarity": "4",
         "characterID": "0",
-        "avi": "https://www.catgirl.io/images/catgirls/mittsy/mittsy-full.mp4",
+        "avi": "/assets/mittsy.png",
         "season": "1"
     }
 ]

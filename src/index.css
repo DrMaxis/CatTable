@@ -21,3 +21,7 @@ code {
 .hidden-button {
   visibility: hidden;
 }
+.loader-container {
+  position: absolute;
+  bottom: 0;
+}
