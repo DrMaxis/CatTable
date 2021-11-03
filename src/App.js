@@ -125,7 +125,6 @@ async function fetchCatGirlNFT(tokenID) {
 
 async function getCatGirlInfo(listing, rawNFT) {
     let rawCat, nftResponse, NFT, waifu;
-    console.log(listing);
     if (listing !== false) {
         rawCat = {
             nftTradeId: listing.id,
