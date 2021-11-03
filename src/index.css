@@ -25,3 +25,6 @@ code {
   position: absolute;
   bottom: 0;
 }
+.hidden-element {
+  display: none !important;
+}

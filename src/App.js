@@ -286,6 +286,7 @@ class App extends React.Component {
         super(props);
         this.state = {
             data: {},
+            loading: false,
             name: '',
             searchInput: '',
             timestamp: moment().unix(),
@@ -296,6 +297,8 @@ class App extends React.Component {
         this.onAddressInput = this.onAddressInput.bind(this)
         this.handleAddressSubmit = this.handleAddressSubmit.bind(this)
         this.validateAddress = this.validateAddress.bind(this);
+        this.refreshData = this.refreshData.bind(this);
+        this.isLoading = this.isLoading.bind(this);
     }
 
 
@@ -345,6 +348,28 @@ class App extends React.Component {
         })
     }
 
+    refreshData() {
+        let fetchTableData = new Promise((resolve, reject) => {
+            let data = fetchLatestListings(false);
+            if (data) {
+                resolve(data);
+            } else {
+                reject(Error('error'));
+            }
+        })
+
+        fetchTableData.then(result => {
+            this.setState({loading: true});
+            setTimeout(() => {
+                this.setState({loading: false});
+                this.setState({data: result});
+            }, 1500)
+
+        }, function (error) {
+            console.log(error);
+            this.setState({error: error});
+        })
+    }
     onAddressInput({target: {name, value}}) {
         console.log(name, value)
         this.setState({[name]: value}, () => {
@@ -354,7 +379,11 @@ class App extends React.Component {
     validateAddress(input) {
         return Web3.utils.isAddress(input);
     }
-
+isLoading() {
+        if(this.state.loading === true) {
+            return true
+        } else return false;
+}
     handleAddressSubmit(e) {
         e.preventDefault();
 
@@ -446,7 +475,7 @@ class App extends React.Component {
     render() {
 
         let data = this.state.data;
-        const {searchInput, bnbPrice} = this.state;
+        const {searchInput, bnbPrice, loading} = this.state;
         let tableData = {columns, data}
         if ((data.length === 1 && data[0].length === 0) || (data === undefined || data.length === 0)) {
             data = ['0'];
@@ -457,7 +486,7 @@ class App extends React.Component {
                 <Container className={'cattable-container '} fluid>
                     <Row>
                         <Col md={6} className={'d-inline-block'}>
-                            <InputGroup className="mb-3">
+                            <InputGroup className="">
                                 <form onSubmit={this.handleAddressSubmit}>
                                     <FormControl
                                         aria-label="NTF Look Up"
@@ -478,6 +507,10 @@ class App extends React.Component {
                         </Col>
                     </Row>
 
+                    <Button onClick={this.refreshData} className={'mb-3'} variant="outline-success">Refresh Table</Button>{' '}
+                    <div  className={(loading === true ? 'd-flex' : 'hidden-element') + ' loader h-100 align-items-center' }>
+                        <a href={'https://www.github.com/DrMaxis'}><img width="100px;" src={AlchemistBlock} alt={'Alchemists Block'} title={'Alchemists Block'}/></a>
+                    </div>
                     <div>
                         Current BNB price: ${parseFloat(bnbPrice).toFixed(2)}
                     </div>
