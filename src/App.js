@@ -388,7 +388,6 @@ isLoading() {
 
         let isVerifiedAddress = this.validateAddress(this.state.searchInput);
         let isOnlyNumber = /^\d+$/.test(this.state.searchInput);
-        let data = this.state.searchInput;
         let response;
         if (!isVerifiedAddress && !isOnlyNumber) {
             let promise = new Promise((resolve, reject) => {
