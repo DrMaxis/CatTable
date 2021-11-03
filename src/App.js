@@ -508,7 +508,7 @@ isLoading() {
                         </Col>
                         <Col md={6}>
                             <div className={'h-100 d-flex justify-content-center align-items-center'}>
-                                <a href="https://www.catgirl.io"><img src="https://count.getloli.com/get/@drmaxis@cattable-prod?theme=rule34"/> </a>
+                                <a href="https://www.catgirl.io"><img alt="Alchemists Neko Fetish" src="https://count.getloli.com/get/@drmaxis@cattable-prod?theme=rule34"/> </a>
                             </div>
                         </Col>
                     </Row>
