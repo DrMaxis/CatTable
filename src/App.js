@@ -371,7 +371,6 @@ class App extends React.Component {
         })
     }
     onAddressInput({target: {name, value}}) {
-        console.log(name, value)
         this.setState({[name]: value}, () => {
         })
     }
@@ -391,7 +390,6 @@ isLoading() {
         let isOnlyNumber = /^\d+$/.test(this.state.searchInput);
         let data = this.state.searchInput;
         let response;
-        console.log(data);
         if (!isVerifiedAddress && !isOnlyNumber) {
             let promise = new Promise((resolve, reject) => {
                 let data = fetchLatestListings(this.state.searchInput);
@@ -404,7 +402,9 @@ isLoading() {
             })
 
             promise.then(result => {
+                this.setState({loading: true});
                 setTimeout(() => {
+                    this.setState({loading: false});
                     this.setState({data: result});
                 }, 1500)
 
@@ -416,28 +416,23 @@ isLoading() {
         }
         if (isVerifiedAddress) {
             let request = new Promise((resolve, reject) => {
-
                 let data = fetchLatestListings({address: this.state.searchInput});
-
                 if (data) {
-                    console.log('NOOO', data)
                     resolve(data);
                 } else {
                     reject(Error('error'));
                 }
             })
             request.then(result => {
-                console.log('result', result);
+                this.setState({loading: true});
                 if (result.length !== 0) {
-                    console.log(result)
                     response = result;
-                    console.log(response, 'ersp')
                 } else {
                     response = [];
-                    console.log('oik', response)
                 }
                 setTimeout(() => {
                     this.setState({data: response});
+                    this.setState({loading: false});
                 }, 1500)
 
             }, function (error) {
@@ -455,8 +450,9 @@ isLoading() {
                 }
             })
             request.then(result => {
-                console.log('result', result)
+                this.setState({loading: true});
                 setTimeout(() => {
+                    this.setState({loading: true});
                     this.setState({data: [result]});
                 }, 1500)
 
