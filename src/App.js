@@ -1,6 +1,5 @@
 import {createClient} from 'urql';
 import axios from 'axios';
-import React, {useState} from 'react';
 import moment from 'moment'
 import DataTable from '../src/components/DataTableBase';
 import DataTableExtensions from 'react-data-table-component-extensions';
@@ -22,26 +21,6 @@ const nftTradeUrl = process.env.REACT_APP_CATGIRL_NFTTRADE_LISTINGS_URL;
 const nftAnalyticsUrl = process.env.REACT_APP_NFT_ACCOUNT_ANALYTICS_URL;
 const binanceApiUrl = process.env.REACT_APP_BINANCE_API_URL;
 
-const fetchAllQuery = `
-query {
-  catgirls(
-    orderDirection: desc,
-    orderBy: timestamp,
-  ) {
-    characterId,
-    id,
-    owner {
-      id
-    }
-    season,
-    rarity,
-    nyaScore,
-    timestamp,
-  }
-}
-
-`
-
 async function getBNBPrice() {
     const url = `${binanceApiUrl}`;
     return axios({
@@ -57,9 +36,9 @@ async function fetchNFTTradeListings(options) {
     let query;
     const fetchLimit = 100;
     if (options) {
-        query = `${nftAnalyticsUrl}` + `${encodeURIComponent(options.address)}&contracts[]=${catgirlID}&connectedChainId[]=${catgirlChainID}&limit=${fetchLimit}&skip=0&sort=listed_desc`;
+        query = `${nftAnalyticsUrl}${encodeURIComponent(options.address)}&contracts[]=${catgirlID}&connectedChainId[]=${catgirlChainID}&limit=${fetchLimit}&skip=0&sort=listed_desc`;
     } else {
-        query = `${nftTradeUrl}` + `&limit=${fetchLimit}&skip=0&sort=listed_desc`;
+        query = `${nftTradeUrl}&limit=${fetchLimit}&skip=0&sort=listed_desc`;
     }
     return axios({
         method: 'get',
