@@ -35,7 +35,7 @@ async function getBNBPrice() {
 
 async function fetchNFTTradeListings(options) {
     let query;
-    const fetchLimit = 100;
+    const fetchLimit = 50;
     if (options) {
         query = `${nftAnalyticsUrl}${encodeURIComponent(options.address)}&contracts[]=${catgirlID}&connectedChainId[]=${catgirlChainID}&limit=${fetchLimit}&skip=0&sort=listed_desc`;
     } else {
