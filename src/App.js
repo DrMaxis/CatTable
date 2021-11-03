@@ -506,6 +506,11 @@ isLoading() {
                                 </form>
                             </InputGroup>
                         </Col>
+                        <Col md={6}>
+                            <div className={'h-100 d-flex justify-content-center align-items-center'}>
+                                <a href="#"><img src="https://count.getloli.com/get/@drmaxis@cattable-prod?theme=rule34"/> </a>
+                            </div>
+                        </Col>
                     </Row>
 
                     <Button onClick={this.refreshData} className={'mb-3'} variant="outline-success">Refresh Table</Button>{' '}
