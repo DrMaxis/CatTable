@@ -515,7 +515,7 @@ isLoading() {
                         <Col md={12}>
                             <DataTableExtensions {...tableData} >
                                 <DataTable
-                                    title="Most Recent CatGirl Listings"
+                                    title="CatGirl NFT Listings"
                                     pagination
                                     print={false}
                                     export={false}
