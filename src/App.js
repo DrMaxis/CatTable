@@ -156,7 +156,7 @@ async function getCatGirlInfo(listing, rawNFT) {
             last_sell_time: listing.last_sell_at ?? null,
             mintTime: listing.mintTime ?? null,
             price: listing.price ?? null,
-            tokenID: listing.tokenID ?? `0x${parseInt(NFT.id).toString(16)}`,
+            tokenID: listing.tokenID ?? parseInt(NFT.id, 16),
             last_updated: listing.updatedAt ?? null,
             verified: null,
         }
