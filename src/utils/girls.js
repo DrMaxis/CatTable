@@ -17,7 +17,7 @@ const girls = [
         "name": "Kita",
         "rarity": "1",
         "characterID": "0",
-        "avi": "https://www.catgirl.io/images/catgirls/kira/kira-web.png",
+        "avi": "https://www.catgirl.io/images/catgirls/kita/kita-web.png",
         "season": "1"
     },
     {
